@@ -7,15 +7,15 @@ output:
 
 # Scraping a stackoverflow
 
-Hace poco me encontraba platicando con un amigo, se encuentra muy interesado por aprender a programar, y la pregunta natural es ¿que lenguaje deberia de aprender? mi primer respuesta fue que en la ciencia de datos los mas demandados son Python y R, y era obvia para mi esta respuesta ya que al ser mi formacion como economista mi primer puerta de entrada a la programación fue por R, sin embargo él no hablaba para algo especifico como la ciencia de datos.
+Hace poco me encontraba platicando con un amigo, se encuentra muy interesado por aprender a programar, y la pregunta natural es ¿Qué lenguaje debería de aprender? mi primer respuesta fue que en la ciencia de datos los mas demandados son Python y R, y era obvia para mi esta respuesta ya que al ser mi formación como economista mi primer puerta de entrada a la programación fue por R, sin embargo él no hablaba para algo especifico como la ciencia de datos.
 
 En este [articulo](http://varianceexplained.org/r/year_data_scientist/) el autor analiza las preguntas mas populares de [stackoverflow](https://stackoverflow.com/tags) pagina que todos conocemos y si aun no lo haces faltara poco para que lo hagas.
 
-De tal manera que este será un tutorial para entender como funciona el [web scraping](https://es.wikipedia.org/wiki/Web_scraping) y observar que lenguajes son mas populares por el numero de preguntas en [stackoverflow](https://stackoverflow.com/tags) y ver de que manera se relacionan entre si los tags de preguntas. 
+De tal manera que este será un tutorial para entender como funciona el [web scraping](https://es.wikipedia.org/wiki/Web_scraping) y observar que lenguajes son mas populares por el numero de preguntas en [stackoverflow](https://stackoverflow.com/tags) y ver de que manera se relacionan entre si los tags de preguntas.
 
 ## Hora de ensuciarse las manos!
 
-Estos son los paquete necesitaremos de igual manera usaremos un plugin de [google chrome](https://chrome.google.com/webstore/detail/selectorgadget/mhjhnkcfbdhnjickkkdbjoemdmbfginb)(tambien disponible para firefox)
+Estos son los paquete necesitaremos de igual manera usaremos un plugin de [google chrome](https://chrome.google.com/webstore/detail/selectorgadget/mhjhnkcfbdhnjickkkdbjoemdmbfginb)(también disponible para firefox)
 
 
 
@@ -28,7 +28,7 @@ library(tidygraph)
 
 Visitemos la url [https://stackoverflow.com/tags?page=1&tab=popular](https://stackoverflow.com/tags?page=1&tab=popular) como podemos ver en esta url tiene un tag  "page=1" el cual nos sirve para identificar la pagina en la que estamos y el tag "tab=popular" lo que nos indica que está ordenado del mas popular al menos popular para nuestro ejemplo solo tomaremos los 36 primeros ranks(cada pagina contiene 36 tags)
 
-![imagen 1](images/captura1.png)
+![](https://github.com/alonmar/scrap-stackoverflow/raw/master/images/captura1.png)
 
 
 ```r
@@ -36,12 +36,12 @@ Visitemos la url [https://stackoverflow.com/tags?page=1&tab=popular](https://sta
 url <- 'https://stackoverflow.com/tags?page=1&tab=popular'
 ```
 
-SelectorGadget nos ayuda a encontrar el nombre del nodo que nos interesa para la extraccion de la informacion, como podemos ver en la siguiente imagen, despues de seleccionar el plugin es posible seleccionar el elemento que nos interesa para ver el nombre del nodo, primero veamos el nombre del nodo que indica el tag para despues elegir el nodo que indica el número de preguntas para ese tag
+SelectorGadget nos ayuda a encontrar el nombre del nodo que nos interesa para la extracción de la información, como podemos ver en la siguiente imagen, después de seleccionar el plugin es posible seleccionar el elemento que nos interesa para ver el nombre del nodo, primero veamos el nombre del nodo que indica el tag para después elegir el nodo que indica el número de preguntas para ese tag
 
-![imagen ](images/captura3.png)
+![](https://github.com/alonmar/scrap-stackoverflow/raw/master/images/captura3.png)
 
 
-![imagen 2](images/captura4.png)
+![](https://github.com/alonmar/scrap-stackoverflow/raw/master/images/captura4.png)
 
 Como vemos los nodos que nos importan son **".post-tag"** y **".item-multiplier-count"**
 
@@ -51,31 +51,31 @@ Como vemos los nodos que nos importan son **".post-tag"** y **".item-multiplier-
 node_name <- c('.post-tag','.item-multiplier-count')
 ```
 
-Creamos la funcion **info_extract** la cual se encargara de extraer y convertir en un data frame la informacion de los nodos que busquemos
+Creamos la función **info_extract** la cual se encargara de extraer y convertir en un data frame la información de los nodos que busquemos
 
 
 
 ```r
 info_extract <- function(url,names,node_name) {
-  
+
   #leemos la url
   webpage <- read_html(url)
-  
+
   # ciclo for para cada nodo
   for (i in 1:length(node_name)) {
-    #extraemos la infomacion del nodo
+    #extraemos la información del nodo
     html <- html_nodes(webpage,node_name[i])
     #lo convertimos en texto
     name <- html_text(html)
-    
+
     if(i==1){
       result <- name
-      
+
     }else {
       result <- cbind(result,name)
     }
   }
-  
+
   #lo convertimos en un dataframe
   result <- data.frame(result,stringsAsFactors = F)
   names(result) <- names
@@ -97,15 +97,15 @@ head(extract)
 
 ```
 ##   name_topic number_question
-## 1 javascript         1756897
-## 2       java         1510823
-## 3         c#         1282756
-## 4        php         1260019
-## 5    android         1170619
-## 6     python         1105955
+## 1 javascript         1757628
+## 2       java         1511400
+## 3         c#         1283199
+## 4        php         1260369
+## 5    android         1171008
+## 6     python         1106846
 ```
 
-Creamos la funcion **related_tags** para obtener un data.frame con los tags que mas se relacionan a los tags populares
+Creamos la función **related_tags** para obtener un data.frame con los tags que mas se relacionan a los tags populares
 
 
 ```r
@@ -116,49 +116,51 @@ related_tags <- function(lenguaje) {
     cat("----------------------\n",
         "Extrayendo: ",i,"\n",
         "======================\n")
-    #en caso de que el nombre sea "c#" la url de stackoverflow la combierte en el tag
+    #en caso de que el nombre sea "c#" la url de stackoverflow la convierte en el tag
     # "c%223" lo mismo sucede con "c++" lo vuelve "c%2b%2b" por lo tanto haremos lo mismo
     i <- ifelse(i=="c#","c%23",i)
     i <- ifelse(i=="c++","c%2b%2b",i)
-    
+
     # creamos la url con el nombre del tag
     url <- paste0('https://stackoverflow.com/questions/tagged/',i)
     webpage <- read_html(url)
-    
+
     # buscamos el nombre de los lenguajes que mas se taggean con los tags populares
     rank_data_html <- html_nodes(webpage,'.js-gps-related-tags')
     character<- as.character(rank_data_html)
     strsplit <- strsplit(character," ")%>% unlist()
-    
+
     # buscamos cuantas veces el tag secundario se asocia con el tag popular
     count_html <- html_nodes(webpage,'.item-multiplier-count')
     count <- html_text(count_html)
-    
-    #despues de separar buscamos en que filas se encuentran los tag que nos importan 
+
+    #despues de separar buscamos en que filas se encuentran los tag que nos importan
     grep <- grep(paste0("/questions/tagged/",i),strsplit, value = T)
     grep <- gsub(paste0("href=\"/questions/tagged/",i,"+"),"",grep)
     grep <- gsub("\"","",grep)
     second_tag <- substr(grep,2,nchar(grep))
     popular <- rep(i,length(substr))
     cbind <-  cbind(popular,second_tag) %>% cbind(count)
-    
+
     if(flag_first)  {
       related_tags <- cbind
       flag_first <- F
       }else {related_tags <- rbind(related_tags,cbind)}
   }
-  
-  related_tags <- related_tags %>% data.frame(stringsAsFactors = F)
-  related_tags$count <-  related_tags$count %>% as.numeric()
+
+  related_tags <- related_tags %>%
+    data.frame(stringsAsFactors = F)
+  related_tags$count <-  related_tags$count %>%
+    as.numeric()
   related_tags
 }
 ```
 
-Basicamente lo que haremos es visitar uno a uno el URL correspondiente a cada tag popular por ejemplo la URL del tag "android" se compone de la sigueinte manera _https://stackoverflow.com/questions/tagged/android_ como vemos despues de _tagged/_ se encuentra **android** indicando la URL de interes. 
+Básicamente lo que haremos es visitar uno a uno el URL correspondiente a cada tag popular por ejemplo la URL del tag "Android" se compone de la siguiente manera _https://stackoverflow.com/questions/tagged/android_ como vemos después de _tagged/_ se encuentra **Android** indicando la URL de interés.
 
-En esta dirección los nodos que nos importan son **".item-multiplier-count"** y **".js-gps-related-tags"**, nos indican cuantas veces el tag secundario se ah tageado junto al tag popular, despues creamos un data frame con la informacion anterior para cada uno de los tags populares, recorriendo uno a uno los 36 tags populares. 
+En esta dirección los nodos que nos importan son **".item-multiplier-count"** y **".js-gps-related-tags"**, nos indican cuantas veces el tag secundario se ah tageado junto al tag popular, después creamos un data frame con la información anterior para cada uno de los tags populares, recorriendo uno a uno los 36 tags populares.
 
-![imagen 2](images/captura5.png)
+![](https://github.com/alonmar/scrap-stackoverflow/raw/master/images/captura5.png)
 
 
 ```r
@@ -283,20 +285,22 @@ tabla_result %>% head()
 
 ```
 ##      popular second_tag  count
-## 1 javascript     jquery 523835
-## 2 javascript       html 324217
-## 3 javascript        css 149393
-## 4 javascript  angularjs 116897
-## 5 javascript        php 112912
-## 6 javascript    node.js  95731
+## 1 javascript     jquery 523968
+## 2 javascript       html 324333
+## 3 javascript        css 149451
+## 4 javascript  angularjs 116909
+## 5 javascript        php 112939
+## 6 javascript    node.js  95794
 ```
 
 
-Ordenaremos de forma descendiente el conteo donde aparecen juntos el tag popular con el secundario y nos quedaremos con las primeras 150 filas de manera que sea mas comodo el manejo de los datos
+Ordenaremos de forma descendiente el conteo donde aparecen juntos el tag popular con el secundario y nos quedaremos con las primeras 150 filas de manera que sea mas cómodo el manejo de los datos
 
 
 ```r
-muestra <- tabla_result %>% arrange(desc(count)) %>% head(150)
+muestra <- tabla_result %>%
+           arrange(desc(count)) %>%
+           head(150)
 ```
 
 
@@ -321,8 +325,10 @@ nodes <- nodes %>% rowid_to_column("id")
 
 per_route <- muestra %>%  
   group_by(popular, second_tag) %>%
-  summarise(weight = sum(count)) %>% 
-  ungroup() %>% arrange(desc(popular )) %>% arrange(desc(weight ))
+  summarise(weight = sum(count)) %>%
+  ungroup() %>% arrange(desc(popular )) %>%
+  arrange(desc(weight ))
+
 per_route
 ```
 
@@ -330,26 +336,26 @@ per_route
 ## # A tibble: 150 x 3
 ##    popular    second_tag weight
 ##    <chr>      <chr>       <dbl>
-##  1 jquery     javascript 523835
-##  2 javascript jquery     523835
-##  3 html       css        346045
-##  4 css        html       346045
-##  5 javascript html       324217
-##  6 html       javascript 324217
-##  7 java       android    224896
-##  8 android    java       224896
-##  9 php        mysql      218983
-## 10 mysql      php        218983
+##  1 jquery     javascript 523968
+##  2 javascript jquery     523968
+##  3 html       css        346166
+##  4 css        html       346166
+##  5 javascript html       324333
+##  6 html       javascript 324333
+##  7 java       android    224994
+##  8 android    java       224994
+##  9 php        mysql      219014
+## 10 mysql      php        219014
 ## # ... with 140 more rows
 ```
 
 ```r
-edges <- per_route %>% 
-  left_join(nodes, by = c("popular" = "label")) %>% 
+edges <- per_route %>%
+  left_join(nodes, by = c("popular" = "label")) %>%
   rename(from = id)
 
-edges <- edges %>% 
-  left_join(nodes, by = c("second_tag" = "label")) %>% 
+edges <- edges %>%
+  left_join(nodes, by = c("second_tag" = "label")) %>%
   rename(to = id)
 
 
@@ -360,33 +366,33 @@ edges <- select(edges, from, to, weight)
 
 
 edges <- mutate(edges, width = weight/(max(weight)-min(weight))*10 )
-visNetwork <- visNetwork(nodes, edges) %>% 
-  visIgraphLayout(layout = "layout_with_fr") %>% 
+visNetwork <- visNetwork(nodes, edges) %>%
+  visIgraphLayout(layout = "layout_with_fr") %>%
   visEdges(arrows = "middle")
 
 htmlwidgets::saveWidget(visNetwork,"visNetwork.html")
 ```
 
-Despues de ver las conecciones que existen entre los diferentes tags, vemos que **JavaScript**, **Jquery**, **HTML** y **PHP** son tecnologias de las mas populares y que se encuentran relacionadas con muchas tecnologias
+Después de ver las conexiones que existen entre los diferentes tags, vemos que **JavaScript**, **JQuery**, **HTML** y **PHP** son tecnologías de las mas populares y que se encuentran relacionadas con muchas tecnologías
 
-![pop](images/pop_js.png)
+![](https://github.com/alonmar/scrap-stackoverflow/raw/master/images/pop_js.png)
 
-Tambien podemos ver como se agrupan las tecnologias como android y java
-![pop](images/pop_java.png)
+También podemos ver como se agrupan las tecnologías como Android y java
+![](https://github.com/alonmar/scrap-stackoverflow/raw/master/images/pop_java.png)
 
-Y hablando de ciencia de datos vemos como se relacionan Python con otras tecnologias, y al ser un lenguaje multiproposito es normal que la ciencia de datos no sea lo unico a su alrededor, y mucho menos lo mas importante. 
-![pop](images/pop_py.png)
+Y hablando de ciencia de datos vemos como se relacionan Python con otras tecnologías, y al ser un lenguaje multipropósito es normal que la ciencia de datos no sea lo único a su alrededor, y mucho menos lo mas importante.
+![](https://github.com/alonmar/scrap-stackoverflow/raw/master/images/pop_py.png)
 
 Y bueno ¿a todo esto donde se encuentra R?
 
-![pop](images/pop_r.png)
+![](https://github.com/alonmar/scrap-stackoverflow/raw/master/images/pop_r.png)
 
 
-ok... ok....  quizas no se encuentra relacionado a muchas tecnologias (al menos no en el volumen necesario para destacar en este analisis) como los tags anteriores, pero esto no significa que no sea popular ya que se encuentra dentro de los 36 mas tageados
+ok... ok....  quizás no se encuentra relacionado a muchas tecnologías (al menos no en el volumen necesario para destacar en este análisis) como los tags anteriores, pero esto no significa que no sea popular ya que se encuentra dentro de los 36 mas tageados
 
 # Conclusiones
 
-Sin duda la tecnologia (en este caso el lenguaje) mas popular en stackoverflow es JavaScript lo cual lo reafirmamos con la gran cantidad de tecnologias que se asoscian a esta.
+Sin duda la tecnología (en este caso el lenguaje) mas popular en stackoverflow es JavaScript lo cual lo reafirmamos con la gran cantidad de tecnologías que se asocian a esta.
 
 El web scraping es realmente divertido, ya que puedes obtener información que esta ahí pero no a simple vista, basta adentrarse para encontrarla, estructurarla y analizarla.
 
@@ -410,12 +416,12 @@ htmltools::includeHTML("./visNetwork.html")
 </head>
 <body style="background-color: white;">
 <div id="htmlwidget_container">
-<div id="htmlwidget-a9a5a882b4f132a39dde" class="visNetwork html-widget" style="width:960px;height:500px;">
+<div id="htmlwidget-6a18ffae99f154680635" class="visNetwork html-widget" style="width:960px;height:500px;">
 
 </div>
 </div>
-<script type="application/json" data-for="htmlwidget-a9a5a882b4f132a39dde">{"x":{"nodes":{"id":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87],"label":["javascript","java","c%23","php","android","python","jquery","html","c%2b%2b","ios","css","mysql","sql","asp.net","ruby-on-rails","c","arrays","objective-c",".net","r","node.js","angularjs","json","sql-server","swift","iphone","regex","ruby","ajax","django","excel","xml","asp.net-mvc","linux","database","angular","vba","python-3.x","wpf","spring","pandas","excel-vba","swing","xcode","wordpress","winforms","laravel","python-2.7","reactjs","linq","eclipse","html5","css3","numpy","android-layout","oracle","hibernate","codeigniter","entity-framework","android-studio","twitter-bootstrap","uitableview","express","20c%2b%2b11","tsql","android-fragments","20qt","list","ruby-on-rails-3","20c","20c%2b%2b","maven","listview","typescript","multithreading","xaml","matplotlib","jquery-ui","symfony","forms","mongodb","spring-mvc","visual-studio","string","android-intent","sqlite","ggplot2"],"x":[0.00334948915126798,0.432007441970556,-0.256909333135185,-0.160454164566697,0.742270459368016,-0.870963647172712,0.0611480333199967,0.000499714189280631,0.786604011948919,-0.333726254464809,0.0938961464280197,-0.328070134240864,-0.356485067463814,-0.11303146223632,0.452622882813625,0.00471214057654046,0.120535532694188,-0.404011709350807,-0.180018023925291,0.153371198901788,-0.113770426598737,0.188771968513029,0.13415581046036,-0.39387742521312,-0.249315572634936,-0.437327419166733,-0.153813547959811,0.382555653103827,-0.0627151624510063,-0.971016712054233,0.356764522297508,0.624479903092521,-0.14166148062954,1,-0.466975630664355,0.255577478468917,0.249180233146477,-0.819396053975302,-0.151528309794886,0.561644250739335,-1,0.474724686013761,0.537637067358437,-0.498684069571443,-0.396201964239278,-0.259504048037045,-0.436652869402248,-0.730469845609042,-0.189935270714553,-0.355299690490773,0.438894839415857,0.00409072091084828,0.147090194484467,-0.895389611442622,0.950213140063174,-0.637592924867029,0.516378281025292,-0.494581433137049,-0.482555274347725,0.760389740972853,0.152183478281832,-0.207799072969438,-0.120751381709926,0.882136995837067,-0.546785064050993,0.931464866986129,0.755166773678966,-0.7776110836022,0.529715300253206,0.698736812285257,0.0694239291984093,0.317436453390731,0.864513435361853,0.483380503642427,0.423047939961205,-0.0544572583746692,-0.926368076265562,0.304735610608287,-0.330637510241524,-0.414789387116767,-0.283564670214489,0.651546654194629,-0.407067402469004,0.620551111113413,0.87811055043462,0.95179248040467,0.042875079016415],"y":[-0.532935566292568,-0.24552879138776,0.0250522981770263,-0.463550930149089,-0.143268662558257,0.267641809627191,-0.571236152538231,-0.655391407994778,0.565442122103176,0.811733835545194,-0.683632210479013,-0.336568991505275,-0.214740019671675,-0.21894133882867,0.588685172119738,0.913904578614891,-0.351768675896695,0.748111928897633,0.130576780995783,0.644015275848347,-0.792046523757844,-0.512319932467577,-0.409767672887158,-0.0685483361735619,0.903176165811117,0.838277927491473,-0.560596275980199,0.520864081870211,-0.490793268770101,0.301600263864901,0.867222405970311,-0.205841167830029,-0.0643046970266344,0.313777032233565,-0.27901529042938,-0.617378986094567,0.904839411297546,0.135777897148862,0.277774637144978,-0.0218770023139361,0.152108254254905,0.880933967891519,-0.157130314282316,0.752806031105592,-0.451846932452194,0.245372978905133,-0.565196330720632,0.338305543987732,-0.714762249539632,0.279775360612024,-0.0669656565877513,-0.787312212720501,-0.860591698084957,0.432559923872722,-0.0264281471751634,-0.24400834717151,-0.407539291019369,-0.488527795299795,0.100793127891634,0.0795198126061438,-0.756393603842381,0.734222990007157,-1,0.484840322564175,-0.113569125029429,-0.125268349409529,0.68655749686731,0.4495013980112,0.682915247084067,0.474533048597701,1,-0.0740154949088873,0.0406181592447905,-0.731093961286036,0.0346011599761313,0.182684529392323,0.0584103329744265,-0.73382012480001,-0.626236697477554,-0.663817751915725,-0.940946938109057,-0.342582550123652,0.182609709541203,-0.446261132394632,-0.313785414793256,-0.228552584944444,0.660517779634756]},"edges":{"from":[7,1,8,11,1,8,2,5,4,12,7,8,3,19,18,10,3,14,1,11,25,10,7,11,1,22,4,1,24,13,7,29,13,12,31,4,8,15,28,26,10,6,30,21,1,4,7,1,29,6,3,2,6,31,18,26,2,10,4,3,33,3,4,4,17,23,1,4,29,6,1,3,2,1,11,1,17,6,5,13,2,4,3,5,13,4,11,10,12,35,21,2,17,9,24,5,8,4,23,9,8,6,23,7,15,13,35,9,16,2,5,36,33,14,18,2,1,14,3,32,2,6,7,23,2,24,3,8,4,27,1,13,4,21,13,3,27,4,26,2,3,2,5,7,32,5,5,20,1,36],"to":[1,7,11,8,8,1,5,2,12,4,8,7,19,3,10,18,14,3,11,1,10,25,11,7,22,1,1,4,13,24,29,7,12,13,37,8,4,28,15,10,26,30,6,1,21,7,4,29,1,38,39,40,41,42,26,18,43,44,45,33,3,46,47,17,4,1,23,29,4,48,49,50,51,52,53,17,1,54,55,56,57,58,59,60,4,13,61,62,35,12,63,17,2,64,65,66,53,23,4,67,61,68,7,23,69,35,13,70,71,72,73,74,14,33,44,75,14,1,76,2,32,77,78,2,23,3,24,52,79,1,27,65,80,81,3,13,4,27,44,82,83,84,85,61,5,32,86,87,36,1],"weight":[523835,523835,346045,346045,324217,324217,224896,224896,218983,218983,206465,206465,172658,172658,163100,163100,157147,157147,149393,149393,136762,136762,122042,122042,116897,116897,112912,112912,109397,109397,109332,109332,108699,108699,104023,99731,99731,98123,98123,98091,98091,96836,96836,95731,95731,90086,90086,89753,89753,89246,88047,87427,82205,80382,73347,73347,70743,69633,69163,68629,68629,66615,65466,61845,61845,59305,59305,58079,58079,57528,56701,54804,53708,52487,52291,51486,51486,50572,50205,46628,46571,46459,45067,44650,43865,43865,43515,42604,42219,42219,42047,41461,41461,40243,37596,37488,35782,35513,35513,35510,35312,35287,34653,34653,34504,34425,34425,34419,34419,34213,34019,33861,33746,33746,33544,33315,31788,31788,31515,31450,31450,30794,30513,30336,30336,29823,29823,29403,29387,29003,29003,28949,28606,28424,28353,28353,27931,27931,27347,27308,27114,27099,26892,26428,26239,26239,26159,26082,26012,26012],"width":[10.5225150304425,10.5225150304425,6.95116537403856,6.95116537403856,6.51269627960138,6.51269627960138,4.51758958505332,4.51758958505332,4.39881242931725,4.39881242931725,4.14735759496849,4.14735759496849,3.4682608075561,3.4682608075561,3.2762648571882,3.2762648571882,3.15668420301995,3.15668420301995,3.00092603194308,3.00092603194308,2.74720131452344,2.74720131452344,2.45151389148352,2.45151389148352,2.34816390564518,2.34816390564518,2.26811537433988,2.26811537433988,2.19750794961261,2.19750794961261,2.19620226466033,2.19620226466033,2.18348690197118,2.18348690197118,2.08955793525008,2.00334255347784,2.00334255347784,1.97104191650446,1.97104191650446,1.97039911775872,1.97039911775872,1.94518935444927,1.94518935444927,1.92299271026047,1.92299271026047,1.80959899401996,1.80959899401996,1.80290986957212,1.80290986957212,1.79272552694432,1.76864066143991,1.75618643574122,1.65128971542094,1.61467027437463,1.47335498761608,1.47335498761608,1.42104723968157,1.39875015818875,1.38930905161071,1.37858234754119,1.37858234754119,1.33812620148125,1.31504570901706,1.24230901344454,1.24230901344454,1.19128686300151,1.19128686300151,1.16665963605539,1.16665963605539,1.15559144515219,1.138979115067,1.10087320192116,1.07885734487961,1.0543305552375,1.05039341291985,1.03422300697236,1.03422300697236,1.01586306779719,1.008490969682,0.936638122384864,0.935493137119016,0.93324334150893,0.905281596069286,0.896905124913875,0.881136468182466,0.881136468182466,0.874105856900947,0.855806180108191,0.848072507698519,0.848072507698519,0.844617464440173,0.832846212408828,0.832846212408828,0.808379685149139,0.755208176400046,0.753038730633177,0.718769522500969,0.713365995544601,0.713365995544601,0.713305733162188,0.709328415922928,0.70882622940282,0.696090779252867,0.696090779252867,0.69309774759302,0.691510838189477,0.691510838189477,0.691390313424651,0.691390313424651,0.687252296498956,0.683355329102914,0.680181510295828,0.677871452303329,0.677871452303329,0.673813785220852,0.669213756696657,0.638540204048427,0.638540204048427,0.633056327248841,0.631750642296559,0.631750642296559,0.618573268008911,0.612928691522891,0.609373210960522,0.609373210960522,0.599068343567895,0.599068343567895,0.590631610030071,0.590310210657201,0.582596625708334,0.582596625708334,0.5815119028249,0.57462190376901,0.57096598590262,0.569539776185512,0.569539776185512,0.561062867726079,0.561062867726079,0.549331790616344,0.548548379644974,0.544651412248932,0.544350100336867,0.540191995950368,0.530871414137153,0.527074884045132,0.527074884045132,0.525467887180785,0.523921152698851,0.522515030442547,0.522515030442547]},"nodesToDataframe":true,"edgesToDataframe":true,"options":{"width":"100%","height":"100%","nodes":{"shape":"dot","physics":false},"manipulation":{"enabled":false},"edges":{"smooth":false,"arrows":"middle"},"physics":{"stabilization":false}},"groups":null,"width":null,"height":null,"idselection":{"enabled":false},"byselection":{"enabled":false},"main":null,"submain":null,"footer":null,"background":"rgba(0, 0, 0, 0)","igraphlayout":{"type":"square"}},"evals":[],"jsHooks":[]}</script>
-<script type="application/htmlwidget-sizing" data-for="htmlwidget-a9a5a882b4f132a39dde">{"viewer":{"width":450,"height":350,"padding":15,"fill":true},"browser":{"width":960,"height":500,"padding":40,"fill":false}}</script>
+<script type="application/json" data-for="htmlwidget-6a18ffae99f154680635">{"x":{"nodes":{"id":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87],"label":["javascript","java","c%23","php","android","python","jquery","html","c%2b%2b","ios","css","mysql","sql","asp.net","ruby-on-rails","c","arrays","objective-c",".net","r","node.js","angularjs","json","sql-server","swift","iphone","regex","ruby","ajax","django","excel","xml","asp.net-mvc","linux","database","angular","vba","python-3.x","wpf","spring","pandas","excel-vba","swing","xcode","wordpress","winforms","laravel","python-2.7","reactjs","linq","eclipse","html5","css3","numpy","android-layout","oracle","hibernate","codeigniter","entity-framework","android-studio","twitter-bootstrap","uitableview","express","20c%2b%2b11","tsql","android-fragments","20qt","list","ruby-on-rails-3","20c","20c%2b%2b","maven","listview","typescript","multithreading","xaml","matplotlib","jquery-ui","symfony","forms","mongodb","spring-mvc","visual-studio","string","android-intent","sqlite","ggplot2"],"x":[-0.2466879899786,0.352562176735149,-0.745914090096934,-0.15914904059708,0.644320894046924,0.403009526775432,-0.0947940706750258,-0.155308755497894,-0.0616002560143928,-0.907814719095609,-0.123958261953353,-0.322453616329596,-0.477123506416998,-0.540094928150805,-0.298815361498021,0.748369903098924,0.0411716393774204,-0.962036040865553,-0.869265049035368,0.931298025348725,-0.269394852261236,-0.295285707977161,0.017399689381282,-0.644397197929327,-0.966799628783302,-0.998594448646636,-0.294061365145265,-0.387292201817242,-0.194421965226109,0.273606414710824,-0.577932322116623,0.520362171199322,-0.690402849425748,0.805561405745501,-0.41429872830718,-0.483263372311272,-0.649537368416303,0.458326362837054,-1,0.29882521872027,0.564937548766566,-0.474086221043134,0.372615006555018,-0.867305770405894,-0.103048176274409,-0.942020588237311,-0.0518128311592698,0.275486251923828,-0.415999330240347,-0.844967354400899,0.451712260602973,-0.364196417547718,-0.0711848341682678,0.550924046898552,0.733084142012568,-0.503727266057779,0.4755706536125,0.0657924853683562,-0.930548121837202,0.807679859529968,-0.00874055017862296,-0.749437929096169,-0.375331244357205,0.0548235449983383,-0.631007344866819,0.824587098153825,-0.0282697529077079,0.419657677237423,-0.174117427049123,-0.194358647495658,0.869593094619677,0.456319184020524,0.621440086742701,-0.676111315478901,0.59851426894294,-0.844860661936123,0.289518725411258,0.111440895964741,-0.19564117017214,0.0265413786961373,-0.211403504120471,0.384246636404362,-0.997698223482769,0.561908947034057,0.880867597173373,0.829638084013959,1],"y":[-0.331032925826826,-0.358782304333797,-0.546197850815017,-0.615385647755835,-0.48832169471973,0.669261086343743,-0.437991102313605,-0.359600153570182,0.930028677845669,0.419659193313649,-0.266588691042205,-0.769266456557432,-0.728396533727851,-0.416878303591552,0.643147972396526,0.321679403907431,-0.456003504346955,0.53803186252466,-0.519497385339336,0.129502705282799,-0.00636492719900317,-0.151726930246057,-0.411183802161538,-0.713547539179622,0.291560310196053,0.460453585667132,-0.516620807608034,0.699616235194765,-0.495978934155232,0.663042045957729,0.85133280610921,-0.427723066903256,-0.419239988681627,0.557526759060524,-0.874356660880897,-0.163731821257658,0.743483144699842,0.495696267620747,-0.540442383237218,-0.146229751530902,0.603787118057926,0.928578739759183,-0.0464808915842531,0.554725499530994,-0.957449520829552,-0.667298642859257,-0.873259484687618,0.804431281074835,-0.0603073524202107,-0.283448796961138,-0.11926601466759,-0.28036234252282,-0.101774359537873,0.75560956468194,-0.712982954574111,-1,-0.258659704579848,-0.87651113672577,-0.334404439268047,-0.617997984827333,-0.248600940958116,0.410809002485145,0.225699748682484,1,-0.875248487086891,-0.41659141402992,0.796276220289827,0.844783469929734,0.604831987742774,0.970706856288725,0.345373635242635,-0.549517782301364,-0.737208651278963,0.0163931777313913,-0.267153417070573,-0.753655753365187,0.522603208665998,-0.618386539789394,-0.891070447847331,-0.776903096730718,0.236310710876316,-0.628840656206802,-0.414786686259088,-0.132453102402416,-0.513311857704194,-0.301723262134906,0.0318651653261788]},"edges":{"from":[7,1,8,11,1,8,2,5,4,12,7,8,3,19,18,10,3,14,1,11,25,10,7,11,1,22,4,1,24,13,7,29,13,12,31,4,8,15,28,26,10,6,30,21,1,4,7,1,29,6,3,2,6,31,18,26,2,10,4,3,33,3,4,4,17,23,1,4,29,6,1,3,2,1,11,1,17,6,5,13,2,4,3,5,13,4,11,10,12,35,21,2,17,9,24,5,8,4,23,9,8,6,23,7,15,13,35,9,16,2,5,36,33,14,18,2,1,14,3,32,2,6,7,23,2,24,3,8,4,27,1,13,4,21,13,3,27,4,26,2,3,2,5,7,32,5,5,20,1,36],"to":[1,7,11,8,8,1,5,2,12,4,8,7,19,3,10,18,14,3,11,1,10,25,11,7,22,1,1,4,13,24,29,7,12,13,37,8,4,28,15,10,26,30,6,1,21,7,4,29,1,38,39,40,41,42,26,18,43,44,45,33,3,46,47,17,4,1,23,29,4,48,49,50,51,52,53,17,1,54,55,56,57,58,59,60,4,13,61,62,35,12,63,17,2,64,65,66,53,23,4,67,61,68,7,23,69,35,13,70,71,72,73,74,14,33,44,75,14,1,76,2,32,77,78,2,23,3,24,52,79,1,27,65,80,81,3,13,4,27,44,82,83,84,85,61,5,32,86,87,36,1],"weight":[523968,523968,346166,346166,324333,324333,224994,224994,219014,219014,206502,206502,172712,172712,163108,163108,157184,157184,149451,149451,136833,136833,122058,122058,116909,116909,112939,112939,109465,109465,109364,109364,108732,108732,104111,99761,99761,98138,98138,98097,98097,96891,96891,95794,95794,90105,90105,89784,89784,89371,88079,87488,82322,80384,73347,73347,70750,69650,69200,68650,68650,66629,65517,61850,61850,59339,59339,58094,58094,57544,56786,54816,53721,52501,52311,51526,51526,50623,50218,46658,46588,46474,45084,44698,43874,43874,43520,42610,42227,42227,42079,41476,41476,40251,37619,37499,35803,35519,35519,35517,35317,35311,34660,34660,34508,34429,34429,34421,34421,34228,34018,33904,33754,33754,33547,33318,31789,31789,31524,31461,31461,30820,30517,30354,30354,29835,29835,29417,29396,29010,29010,28960,28611,28447,28362,28362,27937,27937,27347,27315,27128,27106,26897,26430,26249,26249,26164,26105,26040,26040],"width":[10.5229671759773,10.5229671759773,6.95212962516669,6.95212962516669,6.51365257627609,6.51365257627609,4.51860509953246,4.51860509953246,4.39850741472663,4.39850741472663,4.14722610497903,4.14722610497903,3.46861393615141,3.46861393615141,3.27573464436625,3.27573464436625,3.15676162015392,3.15676162015392,3.00145804212657,3.00145804212657,2.74804791054128,2.74804791054128,2.45131826288138,2.45131826288138,2.34790973795408,2.34790973795408,2.26817933516492,2.26817933516492,2.19841021191819,2.19841021191819,2.19638180620491,2.19638180620491,2.18368920807828,2.18368920807828,2.09088462588969,2.00352259764464,2.00352259764464,1.97092752365804,1.97092752365804,1.9701041114378,1.9701041114378,1.94588374222779,1.94588374222779,1.92385244453013,1.92385244453013,1.80959897816552,1.80959897816552,1.80315226297778,1.80315226297778,1.79485789110072,1.7689103645507,1.7570411786443,1.65329123889398,1.61436994906894,1.4730442955608,1.4730442955608,1.42088816053727,1.39879661316496,1.38975916196719,1.37871338828104,1.37871338828104,1.33812519079064,1.31579264471972,1.24214745907039,1.24214745907039,1.19171848138687,1.19171848138687,1.16671486640639,1.16671486640639,1.15566909272023,1.14044600825822,1.1008820552369,1.07889092398901,1.05438938963063,1.05057357690268,1.03480824536881,1.03480824536881,1.01667309329863,1.00853938722064,0.937043106633891,0.935637280892016,0.93334779325525,0.905432110666602,0.89767998586141,0.88113140855706,0.88113140855706,0.874021946948153,0.855746212303787,0.848054337173246,0.848054337173246,0.845082019890426,0.832971835285423,0.832971835285423,0.808369884802622,0.755510836908147,0.753100849922077,0.719039700518951,0.713336064651918,0.713336064651918,0.71329589820215,0.709279253225366,0.709158753876062,0.696084574476631,0.696084574476631,0.693031924294276,0.691445349528446,0.691445349528446,0.691284683729375,0.691284683729375,0.687408621326778,0.683191144101155,0.680901656464388,0.6778891727318,0.6778891727318,0.673731945180829,0.669132886682412,0.6384256358349,0.6384256358349,0.633103581240661,0.631838338072974,0.631838338072974,0.618964990922382,0.612879773782555,0.609606208126476,0.609606208126476,0.599183014411722,0.599183014411722,0.590788226410244,0.590366478687682,0.582614353882489,0.582614353882489,0.581610192638293,0.574601147153805,0.571307498272843,0.56960042415771,0.56960042415771,0.561065053582044,0.561065053582044,0.549215950900532,0.548573287704246,0.544817724650954,0.544375893703507,0.540178499702768,0.530799633681978,0.527164569977989,0.527164569977989,0.525457495862856,0.524272585594704,0.52296717597725,0.52296717597725]},"nodesToDataframe":true,"edgesToDataframe":true,"options":{"width":"100%","height":"100%","nodes":{"shape":"dot","physics":false},"manipulation":{"enabled":false},"edges":{"smooth":false,"arrows":"middle"},"physics":{"stabilization":false}},"groups":null,"width":null,"height":null,"idselection":{"enabled":false},"byselection":{"enabled":false},"main":null,"submain":null,"footer":null,"background":"rgba(0, 0, 0, 0)","igraphlayout":{"type":"square"}},"evals":[],"jsHooks":[]}</script>
+<script type="application/htmlwidget-sizing" data-for="htmlwidget-6a18ffae99f154680635">{"viewer":{"width":450,"height":350,"padding":15,"fill":true},"browser":{"width":960,"height":500,"padding":40,"fill":false}}</script>
 </body>
 </html><!--/html_preserve-->
 
@@ -425,10 +431,3 @@ htmltools::includeHTML("./visNetwork.html")
 http://varianceexplained.org/r/year_data_scientist/
 https://www.jessesadler.com/post/network-analysis-with-r/
 https://www.analyticsvidhya.com/blog/2017/03/beginners-guide-on-web-scraping-in-r-using-rvest-with-hands-on-knowledge/
-
-
-
-
-
-
-

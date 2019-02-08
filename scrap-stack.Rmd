@@ -7,15 +7,15 @@ output:
 
 # Scraping a stackoverflow
 
-Hace poco me encontraba platicando con un amigo, se encuentra muy interesado por aprender a programar, y la pregunta natural es ¿que lenguaje deberia de aprender? mi primer respuesta fue que en la ciencia de datos los mas demandados son Python y R, y era obvia para mi esta respuesta ya que al ser mi formacion como economista mi primer puerta de entrada a la programación fue por R, sin embargo él no hablaba para algo especifico como la ciencia de datos.
+Hace poco me encontraba platicando con un amigo, se encuentra muy interesado por aprender a programar, y la pregunta natural es ¿Qué lenguaje debería de aprender? mi primer respuesta fue que en la ciencia de datos los mas demandados son Python y R, y era obvia para mi esta respuesta ya que al ser mi formación como economista mi primer puerta de entrada a la programación fue por R, sin embargo él no hablaba para algo especifico como la ciencia de datos.
 
 En este [articulo](http://varianceexplained.org/r/year_data_scientist/) el autor analiza las preguntas mas populares de [stackoverflow](https://stackoverflow.com/tags) pagina que todos conocemos y si aun no lo haces faltara poco para que lo hagas.
 
-De tal manera que este será un tutorial para entender como funciona el [web scraping](https://es.wikipedia.org/wiki/Web_scraping) y observar que lenguajes son mas populares por el numero de preguntas en [stackoverflow](https://stackoverflow.com/tags) y ver de que manera se relacionan entre si los tags de preguntas. 
+De tal manera que este será un tutorial para entender como funciona el [web scraping](https://es.wikipedia.org/wiki/Web_scraping) y observar que lenguajes son mas populares por el numero de preguntas en [stackoverflow](https://stackoverflow.com/tags) y ver de que manera se relacionan entre si los tags de preguntas.
 
 ## Hora de ensuciarse las manos!
 
-Estos son los paquete necesitaremos de igual manera usaremos un plugin de [google chrome](https://chrome.google.com/webstore/detail/selectorgadget/mhjhnkcfbdhnjickkkdbjoemdmbfginb)(tambien disponible para firefox)
+Estos son los paquete necesitaremos de igual manera usaremos un plugin de [google chrome](https://chrome.google.com/webstore/detail/selectorgadget/mhjhnkcfbdhnjickkkdbjoemdmbfginb)(también disponible para firefox)
 
 
 ```{r message=FALSE, warning=FALSE}
@@ -27,7 +27,7 @@ library(tidygraph)
 
 Visitemos la url [https://stackoverflow.com/tags?page=1&tab=popular](https://stackoverflow.com/tags?page=1&tab=popular) como podemos ver en esta url tiene un tag  "page=1" el cual nos sirve para identificar la pagina en la que estamos y el tag "tab=popular" lo que nos indica que está ordenado del mas popular al menos popular para nuestro ejemplo solo tomaremos los 36 primeros ranks(cada pagina contiene 36 tags)
 
-![imagen 1](images/captura1.png)
+![](https://github.com/alonmar/scrap-stackoverflow/raw/master/images/captura1.png)
 
 ```{r}
 #guardamos la URL
@@ -35,12 +35,12 @@ url <- 'https://stackoverflow.com/tags?page=1&tab=popular'
 
 ```
 
-SelectorGadget nos ayuda a encontrar el nombre del nodo que nos interesa para la extraccion de la informacion, como podemos ver en la siguiente imagen, despues de seleccionar el plugin es posible seleccionar el elemento que nos interesa para ver el nombre del nodo, primero veamos el nombre del nodo que indica el tag para despues elegir el nodo que indica el número de preguntas para ese tag
+SelectorGadget nos ayuda a encontrar el nombre del nodo que nos interesa para la extracción de la información, como podemos ver en la siguiente imagen, después de seleccionar el plugin es posible seleccionar el elemento que nos interesa para ver el nombre del nodo, primero veamos el nombre del nodo que indica el tag para después elegir el nodo que indica el número de preguntas para ese tag
 
-![imagen ](images/captura3.png)
+![](https://github.com/alonmar/scrap-stackoverflow/raw/master/images/captura3.png)
 
 
-![imagen 2](images/captura4.png)
+![](https://github.com/alonmar/scrap-stackoverflow/raw/master/images/captura4.png)
 
 Como vemos los nodos que nos importan son **".post-tag"** y **".item-multiplier-count"**
 
@@ -49,31 +49,31 @@ Como vemos los nodos que nos importan son **".post-tag"** y **".item-multiplier-
 node_name <- c('.post-tag','.item-multiplier-count')
 ```
 
-Creamos la funcion **info_extract** la cual se encargara de extraer y convertir en un data frame la informacion de los nodos que busquemos
+Creamos la función **info_extract** la cual se encargara de extraer y convertir en un data frame la información de los nodos que busquemos
 
 
 ```{r}
 
 info_extract <- function(url,names,node_name) {
-  
+
   #leemos la url
   webpage <- read_html(url)
-  
+
   # ciclo for para cada nodo
   for (i in 1:length(node_name)) {
-    #extraemos la infomacion del nodo
+    #extraemos la información del nodo
     html <- html_nodes(webpage,node_name[i])
     #lo convertimos en texto
     name <- html_text(html)
-    
+
     if(i==1){
       result <- name
-      
+
     }else {
       result <- cbind(result,name)
     }
   }
-  
+
   #lo convertimos en un dataframe
   result <- data.frame(result,stringsAsFactors = F)
   names(result) <- names
@@ -92,7 +92,7 @@ extract <- info_extract(url,names,node_name)
 head(extract)
 ```
 
-Creamos la funcion **related_tags** para obtener un data.frame con los tags que mas se relacionan a los tags populares
+Creamos la función **related_tags** para obtener un data.frame con los tags que mas se relacionan a los tags populares
 
 ```{r}
 
@@ -103,49 +103,51 @@ related_tags <- function(lenguaje) {
     cat("----------------------\n",
         "Extrayendo: ",i,"\n",
         "======================\n")
-    #en caso de que el nombre sea "c#" la url de stackoverflow la combierte en el tag
+    #en caso de que el nombre sea "c#" la url de stackoverflow la convierte en el tag
     # "c%223" lo mismo sucede con "c++" lo vuelve "c%2b%2b" por lo tanto haremos lo mismo
     i <- ifelse(i=="c#","c%23",i)
     i <- ifelse(i=="c++","c%2b%2b",i)
-    
+
     # creamos la url con el nombre del tag
     url <- paste0('https://stackoverflow.com/questions/tagged/',i)
     webpage <- read_html(url)
-    
+
     # buscamos el nombre de los lenguajes que mas se taggean con los tags populares
     rank_data_html <- html_nodes(webpage,'.js-gps-related-tags')
     character<- as.character(rank_data_html)
     strsplit <- strsplit(character," ")%>% unlist()
-    
+
     # buscamos cuantas veces el tag secundario se asocia con el tag popular
     count_html <- html_nodes(webpage,'.item-multiplier-count')
     count <- html_text(count_html)
-    
-    #despues de separar buscamos en que filas se encuentran los tag que nos importan 
+
+    #despues de separar buscamos en que filas se encuentran los tag que nos importan
     grep <- grep(paste0("/questions/tagged/",i),strsplit, value = T)
     grep <- gsub(paste0("href=\"/questions/tagged/",i,"+"),"",grep)
     grep <- gsub("\"","",grep)
     second_tag <- substr(grep,2,nchar(grep))
     popular <- rep(i,length(substr))
     cbind <-  cbind(popular,second_tag) %>% cbind(count)
-    
+
     if(flag_first)  {
       related_tags <- cbind
       flag_first <- F
       }else {related_tags <- rbind(related_tags,cbind)}
   }
-  
-  related_tags <- related_tags %>% data.frame(stringsAsFactors = F)
-  related_tags$count <-  related_tags$count %>% as.numeric()
+
+  related_tags <- related_tags %>%
+    data.frame(stringsAsFactors = F)
+  related_tags$count <-  related_tags$count %>%
+    as.numeric()
   related_tags
 }
 ```
 
-Basicamente lo que haremos es visitar uno a uno el URL correspondiente a cada tag popular por ejemplo la URL del tag "android" se compone de la sigueinte manera _https://stackoverflow.com/questions/tagged/android_ como vemos despues de _tagged/_ se encuentra **android** indicando la URL de interes. 
+Básicamente lo que haremos es visitar uno a uno el URL correspondiente a cada tag popular por ejemplo la URL del tag "Android" se compone de la siguiente manera _https://stackoverflow.com/questions/tagged/android_ como vemos después de _tagged/_ se encuentra **Android** indicando la URL de interés.
 
-En esta dirección los nodos que nos importan son **".item-multiplier-count"** y **".js-gps-related-tags"**, nos indican cuantas veces el tag secundario se ah tageado junto al tag popular, despues creamos un data frame con la informacion anterior para cada uno de los tags populares, recorriendo uno a uno los 36 tags populares. 
+En esta dirección los nodos que nos importan son **".item-multiplier-count"** y **".js-gps-related-tags"**, nos indican cuantas veces el tag secundario se ah tageado junto al tag popular, después creamos un data frame con la información anterior para cada uno de los tags populares, recorriendo uno a uno los 36 tags populares.
 
-![imagen 2](images/captura5.png)
+![](https://github.com/alonmar/scrap-stackoverflow/raw/master/images/captura5.png)
 
 ```{r}
 tabla_result <- related_tags(extract$name_topic)
@@ -156,10 +158,12 @@ tabla_result %>% head()
 ```
 
 
-Ordenaremos de forma descendiente el conteo donde aparecen juntos el tag popular con el secundario y nos quedaremos con las primeras 150 filas de manera que sea mas comodo el manejo de los datos
+Ordenaremos de forma descendiente el conteo donde aparecen juntos el tag popular con el secundario y nos quedaremos con las primeras 150 filas de manera que sea mas cómodo el manejo de los datos
 
 ```{r}
-muestra <- tabla_result %>% arrange(desc(count)) %>% head(150)
+muestra <- tabla_result %>%
+           arrange(desc(count)) %>%
+           head(150)
 ```
 
 ```{r}
@@ -183,17 +187,19 @@ nodes <- nodes %>% rowid_to_column("id")
 
 per_route <- muestra %>%  
   group_by(popular, second_tag) %>%
-  summarise(weight = sum(count)) %>% 
-  ungroup() %>% arrange(desc(popular )) %>% arrange(desc(weight ))
+  summarise(weight = sum(count)) %>%
+  ungroup() %>% arrange(desc(popular )) %>%
+  arrange(desc(weight ))
+
 per_route
 
 
-edges <- per_route %>% 
-  left_join(nodes, by = c("popular" = "label")) %>% 
+edges <- per_route %>%
+  left_join(nodes, by = c("popular" = "label")) %>%
   rename(from = id)
 
-edges <- edges %>% 
-  left_join(nodes, by = c("second_tag" = "label")) %>% 
+edges <- edges %>%
+  left_join(nodes, by = c("second_tag" = "label")) %>%
   rename(to = id)
 
 
@@ -204,8 +210,8 @@ edges <- select(edges, from, to, weight)
 
 
 edges <- mutate(edges, width = weight/(max(weight)-min(weight))*10 )
-visNetwork <- visNetwork(nodes, edges) %>% 
-  visIgraphLayout(layout = "layout_with_fr") %>% 
+visNetwork <- visNetwork(nodes, edges) %>%
+  visIgraphLayout(layout = "layout_with_fr") %>%
   visEdges(arrows = "middle")
 
 htmlwidgets::saveWidget(visNetwork,"visNetwork.html")
@@ -214,26 +220,26 @@ htmlwidgets::saveWidget(visNetwork,"visNetwork.html")
 
 ```
 
-Despues de ver las conecciones que existen entre los diferentes tags, vemos que **JavaScript**, **Jquery**, **HTML** y **PHP** son tecnologias de las mas populares y que se encuentran relacionadas con muchas tecnologias
+Después de ver las conexiones que existen entre los diferentes tags, vemos que **JavaScript**, **JQuery**, **HTML** y **PHP** son tecnologías de las mas populares y que se encuentran relacionadas con muchas tecnologías
 
-![pop](images/pop_js.png)
+![](https://github.com/alonmar/scrap-stackoverflow/raw/master/images/pop_js.png)
 
-Tambien podemos ver como se agrupan las tecnologias como android y java
-![pop](images/pop_java.png)
+También podemos ver como se agrupan las tecnologías como Android y java
+![](https://github.com/alonmar/scrap-stackoverflow/raw/master/images/pop_java.png)
 
-Y hablando de ciencia de datos vemos como se relacionan Python con otras tecnologias, y al ser un lenguaje multiproposito es normal que la ciencia de datos no sea lo unico a su alrededor, y mucho menos lo mas importante. 
-![pop](images/pop_py.png)
+Y hablando de ciencia de datos vemos como se relacionan Python con otras tecnologías, y al ser un lenguaje multipropósito es normal que la ciencia de datos no sea lo único a su alrededor, y mucho menos lo mas importante.
+![](https://github.com/alonmar/scrap-stackoverflow/raw/master/images/pop_py.png)
 
 Y bueno ¿a todo esto donde se encuentra R?
 
-![pop](images/pop_r.png)
+![](https://github.com/alonmar/scrap-stackoverflow/raw/master/images/pop_r.png)
 
 
-ok... ok....  quizas no se encuentra relacionado a muchas tecnologias (al menos no en el volumen necesario para destacar en este analisis) como los tags anteriores, pero esto no significa que no sea popular ya que se encuentra dentro de los 36 mas tageados
+ok... ok....  quizás no se encuentra relacionado a muchas tecnologías (al menos no en el volumen necesario para destacar en este análisis) como los tags anteriores, pero esto no significa que no sea popular ya que se encuentra dentro de los 36 mas tageados
 
 # Conclusiones
 
-Sin duda la tecnologia (en este caso el lenguaje) mas popular en stackoverflow es JavaScript lo cual lo reafirmamos con la gran cantidad de tecnologias que se asoscian a esta.
+Sin duda la tecnología (en este caso el lenguaje) mas popular en stackoverflow es JavaScript lo cual lo reafirmamos con la gran cantidad de tecnologías que se asocian a esta.
 
 El web scraping es realmente divertido, ya que puedes obtener información que esta ahí pero no a simple vista, basta adentrarse para encontrarla, estructurarla y analizarla.
 
@@ -250,16 +256,3 @@ htmltools::includeHTML("./visNetwork.html")
 http://varianceexplained.org/r/year_data_scientist/
 https://www.jessesadler.com/post/network-analysis-with-r/
 https://www.analyticsvidhya.com/blog/2017/03/beginners-guide-on-web-scraping-in-r-using-rvest-with-hands-on-knowledge/
-
-```{r}
-
-```
-
-```{r}
-
-```
-
-```{r}
-
-```
-
